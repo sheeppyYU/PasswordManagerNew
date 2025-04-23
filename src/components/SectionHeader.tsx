@@ -7,24 +7,37 @@ interface SectionHeaderProps {
   count: number;
   isExpanded: boolean;
   onToggle: () => void;
+  isDarkMode?: boolean;
 }
 
-const SectionHeader = React.memo(({ title, count, isExpanded, onToggle }: SectionHeaderProps) => (
+const SectionHeader = React.memo(({ title, count, isExpanded, onToggle, isDarkMode = false }: SectionHeaderProps) => (
   <TouchableOpacity 
-    style={styles.sectionHeader} 
+    style={[
+      styles.sectionHeader,
+      isDarkMode && { borderBottomColor: 'rgba(66, 111, 155, 0.3)' }
+    ]}
     onPress={onToggle}
   >
     <View style={styles.sectionHeaderLeft}>
-      <Text style={styles.sectionHeaderTitle}>
+      <Text style={[
+        styles.sectionHeaderTitle,
+        isDarkMode && { color: '#D8D5D6' }
+      ]}>
         {title.charAt(0).toUpperCase() + title.slice(1)}
       </Text>
-      <View style={styles.sectionHeaderCount}>
-        <Text style={styles.sectionHeaderCountText}>{count}</Text>
+      <View style={[
+        styles.sectionHeaderCount,
+        isDarkMode && { backgroundColor: 'rgba(66, 111, 155, 0.3)' }
+      ]}>
+        <Text style={[
+          styles.sectionHeaderCountText,
+          isDarkMode && { color: '#D8D5D6' }
+        ]}>{count}</Text>
       </View>
     </View>
     <ChevronRight 
       size={20} 
-      color="rgba(60, 60, 67, 0.6)" 
+      color={isDarkMode ? "#D8D5D6" : "rgba(60, 60, 67, 0.6)"} 
       style={{
         transform: [{ rotate: isExpanded ? '90deg' : '0deg' }]
       }}

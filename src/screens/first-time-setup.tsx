@@ -9,8 +9,8 @@ import {
   KeyboardAvoidingView,
   useWindowDimensions,
   Keyboard,
-  SafeAreaView,
   Alert,
+  useColorScheme,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { TextInput } from "react-native";
@@ -18,17 +18,24 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 /*  半透明卡片（iOS / Android 同用） */
-const Glass = ({ children, style }: { children: React.ReactNode; style?: any }) => (
-  <View style={[style, { backgroundColor: "rgba(255,255,255,0.7)", overflow: "hidden" }]}> {children} </View>
+const Glass = ({ children, style, isDark }: { children: React.ReactNode; style?: any; isDark?: boolean }) => (
+  <View style={[style, { backgroundColor: isDark ? "rgba(30,30,30,0.7)" : "rgba(255,255,255,0.7)", overflow: "hidden" }]}> {children} </View>
 );
 
 export default function FirstTimeSetupScreen() {
+  const { t } = useTranslation();
+  const colorScheme = useColorScheme();
+  const isDarkMode = false;
   const { width, height, fontScale } = useWindowDimensions();
   const baseScale = Math.min(width / 375, height / 812);
   const ds = (size: number) => size * baseScale;
   const df = (size: number) => size * Math.min(baseScale, fontScale * 1.2);
+  const insets = useSafeAreaInsets();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -43,13 +50,13 @@ export default function FirstTimeSetupScreen() {
   const onPwd = (txt: string) => {
     if (!legalChars.test(txt)) {
       triggerShake()
-      setErrorMessage("只能輸入英文字母、數字和符號")
+      setErrorMessage(t('auth.invalidCharacters'))
       setTimeout(() => setErrorMessage(""), 2000)
       return
     }
     if (txt.length > 20) {
       triggerShake()
-      setErrorMessage("密碼長度不能超過20個字元")
+      setErrorMessage(t('auth.passwordTooLong'))
       setTimeout(() => setErrorMessage(""), 2000)
       return
     }
@@ -83,9 +90,9 @@ export default function FirstTimeSetupScreen() {
 
   const getPasswordStrength = () => {
     if (password.length === 0) return { strength: 0, label: "" };
-    if (password.length < 6) return { strength: 1, label: "弱" };
-    if (password.length < 10) return { strength: 2, label: "中等" };
-    return { strength: 3, label: "強" };
+    if (password.length < 6) return { strength: 1, label: t('auth.passwordStrengthWeak') };
+    if (password.length < 10) return { strength: 2, label: t('auth.passwordStrengthMedium') };
+    return { strength: 3, label: t('auth.passwordStrengthStrong') };
   };
 
   const passwordStrength = getPasswordStrength();
@@ -97,11 +104,11 @@ export default function FirstTimeSetupScreen() {
 
   const getConditionMessage = () => {
     if (bypass) return ""
-    if (!password) return "請輸入密碼"
-    if (!hasLetter) return "至少包含一個英文字母"
-    if (!meetsLen) return "密碼長度至少 7 字元"
-    if (!confirmPassword) return "請確認密碼"
-    if (!passwordsMatch) return "密碼不匹配"
+    if (!password) return t('auth.enterPassword')
+    if (!hasLetter) return t('auth.passwordRequiresLetter')
+    if (!meetsLen) return t('auth.passwordMinLength')
+    if (!confirmPassword) return t('auth.confirmYourPassword')
+    if (!passwordsMatch) return t('auth.passwordsDoNotMatch')
     return ""
   }
 
@@ -114,93 +121,94 @@ export default function FirstTimeSetupScreen() {
     }
 
     try {
-      console.log('密碼設置成功:', password);
+      console.log(t('auth.passwordSetSuccess'), password);
       
-      router.replace('/login');
+      // 儲存主密碼到 SecureStore
+      await SecureStore.setItemAsync('master_password', password);
+      
+      // 導航到免責聲明頁面而不是登入頁面
+      router.replace('/disclaimer');
     } catch (error) {
-      console.error('設置密碼失敗:', error);
-      Alert.alert('錯誤', '無法設置密碼，請重試');
+      console.error(t('auth.passwordSetError'), error);
+      Alert.alert(t('common.error'), t('auth.passwordSetErrorMessage'));
     }
   }
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: "#f5f5f7",
+      backgroundColor: isDarkMode ? "#18181A" : "#f5f5f7",
     },
     content: {
       flex: 1,
       paddingHorizontal: 24,
-      alignItems: "center",
+      paddingTop: 24,
       justifyContent: "center",
     },
     header: {
       alignItems: "center",
-      marginBottom: 40,
+      marginBottom: 32,
     },
     title: {
-      fontSize: 34,
-      fontWeight: "700",
-      color: "#000",
+      fontSize: 28,
+      fontWeight: "bold",
+      color: isDarkMode ? "#FFFFFF" : "#000000",
       marginBottom: 12,
+      textAlign: "center",
     },
     subtitle: {
       fontSize: 15,
-      color: "rgba(60,60,67,0.6)",
+      color: isDarkMode ? "rgba(255,255,255,0.7)" : "rgba(60,60,67,0.7)",
       textAlign: "center",
-      paddingHorizontal: 20,
+      lineHeight: 22,
+    },
+    form: {
+      width: "100%",
+      marginBottom: 24,
     },
     inputContainer: {
       width: "100%",
-      marginBottom: 20,
+      marginBottom: 16,
     },
     inputLabel: {
-      fontSize: 15,
+      fontSize: 14,
       fontWeight: "500",
-      color: "rgba(60,60,67,0.8)",
+      color: isDarkMode ? "rgba(255,255,255,0.8)" : "rgba(60,60,67,0.8)",
       marginBottom: 8,
-      marginLeft: 4,
     },
-    inputBlur: {
-      borderRadius: 14,
-      overflow: "hidden",
+    inputWrapper: {
       flexDirection: "row",
       alignItems: "center",
+      height: 50,
+      borderRadius: 10,
       borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.5)",
-      backgroundColor: "white",
-    },
-    inputError: {
-      borderColor: "rgba(255,59,48,0.5)",
+      borderColor: "rgba(60, 60, 67, 0.3)",
+      paddingHorizontal: 16,
+      backgroundColor: isDarkMode ? "rgba(30,30,30,0.7)" : "white",
     },
     input: {
       flex: 1,
-      height: 56,
-      paddingHorizontal: 16,
-      fontSize: 17,
-      color: "#000",
+      height: 48,
+      fontSize: 16,
+      color: isDarkMode ? "#FFFFFF" : "#000000",
     },
-    eyeBtn: {
-      paddingHorizontal: 16,
-      height: 56,
-      justifyContent: "center",
+    eyeIcon: {
+      padding: 8,
     },
     strengthContainer: {
+      marginTop: 8,
       flexDirection: "row",
       alignItems: "center",
-      marginTop: 8,
-      paddingHorizontal: 4,
-    },
-    strengthBars: {
-      flexDirection: "row",
-      flex: 1,
-      gap: 4,
     },
     strengthBar: {
       height: 4,
-      flex: 1,
-      backgroundColor: "rgba(60,60,67,0.2)",
+      width: 60,
+      backgroundColor: "rgba(60, 60, 67, 0.2)",
       borderRadius: 2,
+      marginRight: 4,
+    },
+    strengthBarActive: {
+      backgroundColor: "#34C759",
     },
     strengthBarWeak: {
       backgroundColor: "#FF3B30",
@@ -215,7 +223,7 @@ export default function FirstTimeSetupScreen() {
       fontSize: 13,
       fontWeight: "500",
       marginLeft: 8,
-      color: "rgba(60,60,67,0.6)",
+      color: isDarkMode ? "rgba(255,255,255,0.6)" : "rgba(60,60,67,0.6)",
     },
     setupBtn: {
       height: 50,
@@ -239,7 +247,7 @@ export default function FirstTimeSetupScreen() {
       }),
     },
     setupBtnDisabled: {
-      backgroundColor: "#E5E5EA",
+      backgroundColor: isDarkMode ? "rgba(60,60,67,0.3)" : "#E5E5EA",
     },
     setupBtnText: {
       color: "white",
@@ -249,7 +257,7 @@ export default function FirstTimeSetupScreen() {
       zIndex: 1,
     },
     setupBtnTextDisabled: {
-      color: "rgba(60,60,67,0.3)",
+      color: isDarkMode ? "rgba(255,255,255,0.3)" : "rgba(60,60,67,0.3)",
     },
     conditionMessage: {
       color: "#FF3B30",
@@ -267,105 +275,109 @@ export default function FirstTimeSetupScreen() {
       padding: 16,
       borderWidth: 1,
       borderColor: "rgba(255,59,48,0.5)",
-      backgroundColor: "white",
+      backgroundColor: isDarkMode ? "rgba(30,30,30,0.7)" : "white",
     },
     messageText: {
       fontSize: 15,
-      color: "rgba(60,60,67,0.8)",
+      color: isDarkMode ? "rgba(255,255,255,0.8)" : "rgba(60,60,67,0.8)",
       lineHeight: 22,
       textAlign: "center",
     },
   });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[
+      styles.container,
+      {
+        paddingTop: insets.top, 
+        paddingBottom: insets.bottom,
+        paddingLeft: insets.left,
+        paddingRight: insets.right
+      }
+    ]}>
       <StatusBar style="dark" />
-      <LinearGradient colors={["#f0f4ff", "#ffffff"]} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={["#f0f4ff", "#ffffff"]} style={StyleSheet.absoluteFillObject} />
 
       <KeyboardAvoidingView
-        style={StyleSheet.absoluteFill}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : ds(20)}
+        style={{ flex: 1 }}
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.title}>設置密碼</Text>
+            <Text style={styles.title}>{t('auth.createPassword')}</Text>
             <Text style={styles.subtitle}>
-              請設置一個安全的密碼來保護您的資料
+              {t('auth.createPasswordDescription')}
             </Text>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>密碼</Text>
-            <View style={[styles.inputBlur, errorMessage && styles.inputError]}>
-              <TextInput
-                style={styles.input}
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={onPwd}
-                placeholder="輸入密碼"
-                placeholderTextColor="rgba(60,60,67,0.3)"
-              />
-              <TouchableOpacity
-                style={styles.eyeBtn}
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <Ionicons
-                  name={showPassword ? "eye-off-outline" : "eye-outline"}
-                  size={24}
-                  color="rgba(60,60,67,0.6)"
+          <View style={styles.form}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>{t('auth.enterNewPassword')}</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  value={password}
+                  onChangeText={onPwd}
+                  placeholder={t('auth.enterNewPassword')}
+                  placeholderTextColor={isDarkMode ? "rgba(255,255,255,0.4)" : "rgba(60,60,67,0.4)"}
+                  secureTextEntry={!showPassword}
+                  autoFocus
+                  onSubmitEditing={() => setShowConfirmPassword(true)}
                 />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.strengthContainer}>
-              <View style={styles.strengthBars}>
-                <View
-                  style={[
-                    styles.strengthBar,
-                    passwordStrength.strength >= 1 && styles.strengthBarWeak,
-                    passwordStrength.strength >= 2 && styles.strengthBarMedium,
-                    passwordStrength.strength >= 3 && styles.strengthBarStrong,
-                  ]}
-                />
-                <View
-                  style={[
-                    styles.strengthBar,
-                    passwordStrength.strength >= 2 && styles.strengthBarMedium,
-                    passwordStrength.strength >= 3 && styles.strengthBarStrong,
-                  ]}
-                />
-                <View
-                  style={[
-                    styles.strengthBar,
-                    passwordStrength.strength >= 3 && styles.strengthBarStrong,
-                  ]}
-                />
+                <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
+                  {showPassword ? (
+                    <Ionicons
+                      name="eye-off-outline"
+                      size={20}
+                      color={isDarkMode ? "rgba(255,255,255,0.6)" : "rgba(60,60,67,0.6)"}
+                    />
+                  ) : (
+                    <Ionicons
+                      name="eye-outline"
+                      size={20}
+                      color={isDarkMode ? "rgba(255,255,255,0.6)" : "rgba(60,60,67,0.6)"}
+                    />
+                  )}
+                </TouchableOpacity>
               </View>
-              <Text style={styles.strengthText}>{passwordStrength.label}</Text>
+              <View style={styles.strengthContainer}>
+                <View style={[styles.strengthBar, passwordStrength.strength >= 1 && styles.strengthBarWeak]}></View>
+                <View style={[styles.strengthBar, passwordStrength.strength >= 2 && styles.strengthBarMedium]}></View>
+                <View style={[styles.strengthBar, passwordStrength.strength >= 3 && styles.strengthBarStrong]}></View>
+                <Text style={styles.strengthText}>{passwordStrength.label}</Text>
+              </View>
             </View>
-          </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>確認密碼</Text>
-            <View style={[styles.inputBlur, errorMessage && styles.inputError]}>
-              <TextInput
-                style={styles.input}
-                secureTextEntry={!showConfirmPassword}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder="再次輸入密碼"
-                placeholderTextColor="rgba(60,60,67,0.3)"
-              />
-              <TouchableOpacity
-                style={styles.eyeBtn}
-                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                <Ionicons
-                  name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
-                  size={24}
-                  color="rgba(60,60,67,0.6)"
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>{t('auth.reenterPassword')}</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  placeholder={t('auth.reenterPassword')}
+                  placeholderTextColor={isDarkMode ? "rgba(255,255,255,0.4)" : "rgba(60,60,67,0.4)"}
+                  secureTextEntry={!showConfirmPassword}
+                  returnKeyType="done"
+                  onSubmitEditing={handleSetupComplete}
                 />
-              </TouchableOpacity>
+                <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  {showConfirmPassword ? (
+                    <Ionicons
+                      name="eye-off-outline"
+                      size={20}
+                      color={isDarkMode ? "rgba(255,255,255,0.6)" : "rgba(60,60,67,0.6)"}
+                    />
+                  ) : (
+                    <Ionicons
+                      name="eye-outline"
+                      size={20}
+                      color={isDarkMode ? "rgba(255,255,255,0.6)" : "rgba(60,60,67,0.6)"}
+                    />
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 
@@ -384,7 +396,7 @@ export default function FirstTimeSetupScreen() {
               />
             ) : null}
             <Text style={[styles.setupBtnText, !canSubmit && styles.setupBtnTextDisabled]}>
-              Complete Setup
+              {t('common.completeSetup')}
             </Text>
           </TouchableOpacity>
 
@@ -406,6 +418,6 @@ export default function FirstTimeSetupScreen() {
           ) : null}
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
