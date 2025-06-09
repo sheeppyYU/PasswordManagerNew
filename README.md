@@ -152,9 +152,9 @@ PasswordManager/
 
 <div align="center">
 
-| 登入畫面 | 主畫面 | 新增密碼 | 設定 |
+| 主畫面(白) | 主畫面(黑) | 新增密碼 | 設定 |
 |:---:|:---:|:---:|:---:|
-| ![Login](assets/screenshots/login.png) | ![Home](assets/screenshots/home.png) | ![Add](assets/screenshots/add.png) | ![Settings](assets/screenshots/settings.png) |
+| ![Login](assets/screenshots/home.png) | ![Home](assets/screenshots/home_black.png) | ![Add](assets/screenshots/add.png) | ![Settings](assets/screenshots/settings.png) |
 
 </div>
 
