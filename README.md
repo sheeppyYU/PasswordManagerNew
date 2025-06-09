@@ -25,8 +25,8 @@
 - **自動鎖定** - 閒置自動鎖定保護
 
 ### 📱 現代化介面
-- **iOS 設計語言** - 遵循 Apple Human Interface Guidelines
-- **流暢動畫** - 60fps 流暢操作體驗
+- **iOS 設計語言** - 以Apple Human Interface Guidelines 為基底去設計
+- **流暢動畫** - 流暢操作體驗
 - **深色模式** - 支援系統深色模式切換
 - **自適應佈局** - 完美支援各種螢幕尺寸
 
@@ -199,7 +199,7 @@ npm test -- --coverage
 
 ## 🤝 貢獻指南
 
-我們歡迎所有形式的貢獻！
+我們歡迎所有形式的貢獻！(建議不要，因為我是新手)
 
 1. Fork 本專案
 2. 建立功能分支 (`git checkout -b feature/AmazingFeature`)
@@ -211,9 +211,10 @@ npm test -- --coverage
 
 ## 📞 聯絡資訊
 
-- **開發者**: PygmalionZ
-- **Email**: your-email@example.com
-- **GitHub**: [@your-username](https://github.com/your-username)
+- **開發者**: sheeppy
+- **DC**: sheeppy.
+- **Email**: sheeppy2313131@gmail.com
+- **GitHub**: [sheeppyYU](https://github.com/sheeppyYU)
 
 ---
 
@@ -221,6 +222,6 @@ npm test -- --coverage
 
 **⭐ 如果這個專案對您有幫助，請給我們一個星標！**
 
-Made with ❤️ by [PygmalionZ](https://github.com/your-username)
+Made with ❤️ by [sheeppy](https://github.com/your-username)
 
 </div>
